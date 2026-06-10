@@ -1,192 +1,309 @@
-<div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2"></div>
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سامانه هوشمند VIDAL NODE</title>
+    <style>
+        /* تزریق مستقیم استایل‌ها برای حل مشکل فیلتر بودن CDN تلویند در ایران */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background-color: #020617; color: #f8fafc; min-height: 100vh; display: flex; flex-col: column; justify-content: space-between; direction: rtl; }
+        .hidden { display: none !important; }
+        .flex { display: flex !important; }
+        
+        /* صفحه لاگین */
+        .container { flex-grow: 1; display: flex; align-items: center; justify-content: center; padding: 16px; }
+        .login-card { background-color: #0f172a; border: 1px solid #1e293b; padding: 32px; rounded-radius: 16px; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); w-full: 100%; max-width: 400px; text-align: center; }
+        .logo-icon { inline-size: auto; width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(to top right, #ec4899, #f97316); display: inline-flex; align-items: center; justify-content: center; font-size: 30px; margin-bottom: 16px; }
+        .title-gradient { font-size: 24px; font-weight: 900; background: linear-gradient(to right, #ec4899, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+        .subtitle { color: #94a3b8; font-size: 14px; margin-bottom: 24px; }
+        
+        /* فرم‌ها و اینپوت‌ها */
+        .form-group { margin-bottom: 16px; }
+        input[type="text"], input[type="password"] { w-full: 100%; width: 100%; background-color: #020617; border: 1px solid #1e293b; border-radius: 12px; padding: 12px 16px; color: #fff; text-align: right; outline: none; transition: border 0.2s; }
+        input[type="text"]:focus, input[type="password"]:focus { border-color: #ec4899; }
+        input.text-left { text-align: left !important; }
+        
+        .btn-gradient { w-full: 100%; width: 100%; background: linear-gradient(to right, #ec4899, #f97316); color: white; font-weight: bold; padding: 12px; border-radius: 12px; border: none; cursor: pointer; transition: opacity 0.2s; font-size: 16px; }
+        .btn-gradient:hover { opacity: 0.9; }
+        
+        /* داشبورد و هدر */
+        .dashboard { display: flex; flex-direction: column; min-height: 100vh; width: 100%; }
+        header { background-color: #0f172a; border-bottom: 1px solid #1e293b; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .header-logo { font-weight: 900; background: linear-gradient(to right, #ec4899, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 18px; }
+        .btn-admin { background-color: rgba(147, 51, 234, 0.2); color: #c084fc; border: 1px solid rgba(147, 51, 234, 0.3); padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: bold; cursor: pointer; margin-right: 12px; }
+        .btn-logout { background-color: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); padding: 6px 16px; border-radius: 12px; font-size: 14px; cursor: pointer; transition: background 0.2s; }
+        .btn-logout:hover { background-color: rgba(239, 68, 68, 0.2); }
+        
+        main { flex-grow: 1; display: flex; align-items: center; justify-content: center; padding: 24px; }
+        
+        /* کارت‌های انتخاب حالت */
+        .grid-modes { display: grid; grid-template-columns: 1fr; gap: 24px; width: 100%; max-width: 650px; margin: 0 auto; }
+        @media (min-width: 768px) { .grid-modes { grid-template-columns: 1fr 1fr; } }
+        .mode-card { background-color: #0f172a; border: 1px solid #1e293b; padding: 24px; border-radius: 16px; text-align: right; cursor: pointer; transition: all 0.2s; }
+        .mode-card:hover { border-color: rgba(236, 72, 153, 0.5); transform: translateY(-2px); }
+        .mode-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 16px; }
+        .bg-pink-box { background-color: rgba(236, 72, 153, 0.1); color: #ec4899; }
+        .bg-orange-box { background-color: rgba(249, 115, 22, 0.1); color: #f97316; }
+        .mode-title { font-size: 18px; font-weight: bold; margin-bottom: 4px; }
+        .mode-desc { color: #94a3b8; font-size: 14px; line-height: 1.6; }
+        
+        /* باکس فرم‌ها و جدول مدیریت */
+        .box-panel { background-color: #0f172a; border: 1px solid #1e293b; padding: 32px; border-radius: 16px; width: 100%; max-width: 500px; text-align: center; }
+        .box-panel-wide { max-width: 650px; text-align: right; }
+        .panel-title { font-size: 20px; font-weight: bold; margin-bottom: 16px; }
+        .panel-desc { color: #94a3b8; font-size: 14px; margin-bottom: 24px; line-height: 1.6; }
+        
+        .code-block { background-color: #020617; padding: 16px; border-radius: 12px; border: 1px solid #1e293b; font-family: monospace; font-size: 14px; color: #fb923c; text-align: left; margin-bottom: 16px; }
+        .code-line { margin-bottom: 8px; }
+        .code-label { color: #64748b; }
+        
+        .btn-back { background: none; border: none; color: #64748b; font-size: 14px; margin-top: 24px; cursor: pointer; display: block; margin-left: auto; margin-right: auto; }
+        .btn-back:hover { color: #fff; }
+        
+        /* جدول مدیریت ادمین */
+        .admin-form-grid { display: grid; grid-template-columns: 1fr; gap: 16px; background-color: #020617; padding: 16px; border-radius: 12px; border: 1px solid #1e293b; margin-bottom: 24px; }
+        @media (min-width: 768px) { .admin-form-grid { grid-template-columns: 1fr 1fr auto; } }
+        .btn-purple { background-color: #9333ea; color: white; border: none; border-radius: 8px; padding: 10px 20px; font-weight: bold; cursor: pointer; }
+        .btn-purple:hover { background-color: #a855f7; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px; }
+        th { color: #64748b; border-b: 1px solid #1e293b; padding-bottom: 8px; font-weight: normal; }
+        td { padding: 12px 8px; border-bottom: 1px solid rgba(30, 41, 59, 0.5); color: #cbd5e1; }
+        .font-mono { font-family: monospace; }
+        .status-badge { padding: 2px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .status-active { background-color: rgba(34, 197, 94, 0.1); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); }
+        .status-expired { background-color: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
+        
+        /* توست نوتیفیکیشن اختصاصی */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 50; display: flex; flex-direction: column; gap: 8px; }
+        .toast { padding: 16px; border-radius: 12px; font-size: 13px; font-weight: bold; border: 1px solid; min-width: 250px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+        .toast-success { background-color: rgba(34, 197, 94, 0.1); color: #4ade80; border-color: rgba(34, 197, 94, 0.2); }
+        .toast-error { background-color: rgba(239, 68, 68, 0.1); color: #f87171; border-color: rgba(239, 68, 68, 0.2); }
+        
+        footer { padding: 16px; text-align: center; font-size: 12px; color: #334155; border-top: 1px solid #0f172a; width: 100%; }
+    </style>
+</head>
+<body>
 
-<div id="login-screen" class="flex-grow flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-tr from-pink-500 to-orange-500 text-white text-3xl mb-4 animate-pulse">⚡</div>
-        <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-500 mb-2">سامانه هوشمند VIDAL</h1>
-        <p class="text-slate-400 text-sm mb-6">جهت اتصال به اینترنت آزاد و پیکربندی شبکه، وارد شوید.</p>
-        <form id="login-form" class="space-y-4">
-            <input type="text" id="login-username" placeholder="نام کاربری" class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 text-white text-right focus:outline-none focus:border-pink-500" required>
-            <input type="password" id="login-password" placeholder="رمز عبور" class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 text-white text-right focus:outline-none focus:border-pink-500" required>
-            <button type="submit" class="w-full bg-gradient-to-r from-pink-500 to-orange-500 font-bold py-3 rounded-xl hover:opacity-90 transition-opacity">ورود به سیستم</button>
-        </form>
+    <div id="toast-container"></div>
+
+    <div id="login-screen" class="container">
+        <div class="login-card">
+            <div class="logo-icon">⚡</div>
+            <h1 class="title-gradient">سامانه هوشمند VIDAL</h1>
+            <p class="subtitle">جهت اتصال به اینترنت آزاد و پیکربندی شبکه، وارد شوید.</p>
+            <form id="login-form">
+                <div class="form-group">
+                    <input type="text" id="login-username" placeholder="نام کاربری" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="login-password" placeholder="رمز عبور" required>
+                </div>
+                <button type="submit" class="btn-gradient">ورود به سیستم</button>
+            </form>
+        </div>
     </div>
-</div>
 
-<div id="dashboard-screen" class="hidden flex-col min-h-screen">
-    <header class="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center px-6">
-        <div class="flex items-center gap-4">
-            <span class="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-500">VIDAL NODE</span>
-            <button id="admin-panel-btn" class="hidden bg-purple-600/20 text-purple-400 text-xs px-3 py-1 rounded-full border border-purple-500/30 font-bold">⚙️ پنل مدیریت (وحید)</button>
-        </div>
-        <button onclick="handleLogout()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm font-medium py-1.5 px-4 rounded-xl border border-red-500/20 transition-colors">حذف تنظیمات و خروج</button>
-    </header>
+    <div id="dashboard-screen" class="dashboard hidden">
+        <header>
+            <div class="flex" style="align-items: center;">
+                <span class="header-logo">VIDAL NODE</span>
+                <button id="admin-panel-btn" class="btn-admin hidden">⚙️ پنل مدیریت (وحید)</button>
+            </div>
+            <button onclick="handleLogout()" class="btn-logout">حذف تنظیمات و خروج</button>
+        </header>
 
-    <main class="flex-grow flex items-center justify-center p-6">
-        <div id="tab-select-mode" class="text-center max-w-2xl w-full">
-            <h2 class="text-3xl font-extrabold mb-2">ارتباط مستقیم برقرار است 🚀</h2>
-            <p class="text-slate-400 mb-8">نوع بهینه‌سازی شبکه خود را انتخاب کنید.</p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div onclick="switchTab('web_proxy')" class="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-right cursor-pointer hover:border-pink-500/50 transition-all group">
-                    <div class="w-12 h-12 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-500 text-xl mb-4">🌐</div>
-                    <h3 class="text-lg font-bold mb-1">حالت اول: مرورگر آزاد (Web Proxy)</h3>
-                    <p class="text-slate-400 text-sm leading-relaxed">باز کردن وب‌سایت‌ها و استریم ۱۰۰٪ فیلم و یوتیوب مستقیماً در مرورگر.</p>
-                </div>
-                <div onclick="switchTab('phone_config')" class="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-right cursor-pointer hover:border-orange-500/50 transition-all group">
-                    <div class="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 text-xl mb-4">📱</div>
-                    <h3 class="text-lg font-bold mb-1">حالت دوم: اتصال کل گوشی و مودم</h3>
-                    <p class="text-slate-400 text-sm leading-relaxed">دریافت تنظیمات مخفی جهت اعمال در پروکسی مودم یا گوشی برای باز شدن تلگرام و واتساپ.</p>
+        <main>
+            <div id="tab-select-mode" class="text-center" style="width: 100%;">
+                <h2 style="font-size: 28px; font-weight: 900; margin-bottom: 8px;">ارتباط مستقیم برقرار است 🚀</h2>
+                <p style="color: #64748b; margin-bottom: 32px;">نوع بهینه‌سازی شبکه خود را انتخاب کنید.</p>
+                <div class="grid-modes">
+                    <div onclick="switchTab('web_proxy')" class="mode-card">
+                        <div class="mode-icon bg-pink-box">🌐</div>
+                        <h3 class="mode-title">حالت اول: مرورگر آزاد (Web Proxy)</h3>
+                        <p class="mode-desc">باز کردن وب‌سایت‌ها و استریم ۱۰۰٪ فیلم و یوتیوب مستقیماً در مرورگر بدون نیاز به نصب برنامه.</p>
+                    </div>
+                    <div onclick="switchTab('phone_config')" class="mode-card">
+                        <div class="mode-icon bg-orange-box">📱</div>
+                        <h3 class="mode-title">حالت دوم: اتصال کل گوشی و مودم</h3>
+                        <p class="mode-desc">دریافت تنظیمات مخفی جهت اعمال در پروکسی مودم یا گوشی برای آزاد شدن تلگرام، واتساپ و سایفون.</p>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div id="tab-web-proxy" class="hidden bg-slate-900 border border-slate-800 p-8 rounded-2xl max-w-md w-full text-center">
-            <h3 class="text-xl font-bold mb-4">🌐 مرورگر آزاد اینترنت</h3>
-            <form id="proxy-web-form" class="space-y-4">
-                <input type="text" id="target-url-input" placeholder="مثال: wikipedia.org" class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 text-white text-left focus:outline-none focus:border-pink-500" required>
-                <button type="submit" class="w-full bg-pink-600 font-bold py-3 rounded-xl hover:bg-pink-500 transition-colors">باز کردن صفحه و فیلم</button>
-            </form>
-            <button onclick="switchTab('select_mode')" class="text-sm text-slate-500 mt-6 block mx-auto hover:text-white">بازگشت به منو اصلی</button>
-        </div>
-
-        <div id="tab-phone-config" class="hidden bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-xl w-full text-right space-y-6">
-            <h3 class="text-xl font-bold text-orange-500 mb-2">⚙️ تنظیمات مخفی آزادکننده شبکه (سیستمی)</h3>
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 text-left font-mono text-sm text-orange-400">
-                <div>Proxy Type: HTTP / HTTPS</div>
-                <div>Server Address: <span class="current-host">...</span></div>
-                <div>Port: 443</div>
-                <div>PAC URL (Auto): <span class="current-pac">...</span></div>
+            <div id="tab-web-proxy" class="box-panel hidden">
+                <h3 class="panel-title">🌐 مرورگر آزاد اینترنت</h3>
+                <p class="panel-desc">آدرس سایت مورد نظرتان را وارد کنید تا از طریق سرور امن باز شود.</p>
+                <form id="proxy-web-form">
+                    <div class="form-group">
+                        <input type="text" id="target-url-input" class="text-left" placeholder="مثال: wikipedia.org" required>
+                    </div>
+                    <button type="submit" class="btn-gradient">باز کردن صفحه و فیلم</button>
+                </form>
+                <button onclick="switchTab('select_mode')" class="btn-back">بازگشت به منو اصلی</button>
             </div>
-            <button onclick="switchTab('select_mode')" class="text-sm text-slate-500 mt-2 block mx-auto hover:text-white">بازگشت به منو اصلی</button>
-        </div>
 
-        <div id="tab-admin-panel" class="hidden bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-2xl w-full text-right space-y-6">
-            <h3 class="text-xl font-bold text-purple-400">📊 پنل مدیریت و ساخت اکانت (ویژه وحید)</h3>
-            <form id="create-user-form" class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800">
-                <input type="text" id="new-user-name" placeholder="نام کاربری جدید" class="bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-sm text-center text-white" required>
-                <input type="text" id="new-user-pass" placeholder="رمز عبور" class="bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-sm text-center text-white" required>
-                <button type="submit" class="bg-purple-600 hover:bg-purple-500 font-bold text-sm py-2.5 rounded-lg text-white">+ ایجاد اکانت</button>
-            </form>
-            <div class="overflow-x-auto"><table class="w-full text-sm text-center"><thead><tr class="border-b border-slate-800 text-slate-500"><th class="pb-2">نام کاربری</th><th class="pb-2">رمز عبور</th><th class="pb-2">حجم اختصاصی</th><th class="pb-2">وضعیت</th></tr></thead><tbody id="users-table-body"></tbody></table></div>
-            <button onclick="switchTab('select_mode')" class="text-sm text-slate-500 mt-2 block mx-auto hover:text-white">بازگشت به منو اصلی</button>
-        </div>
-    </main>
-    <footer class="p-4 text-center text-xs text-slate-600 border-t border-slate-900">Powered by VidalCompany Infrastructure &copy; 2026</footer>
-</div>
+            <div id="tab-phone-config" class="box-panel box-panel-wide hidden">
+                <h3 class="panel-title" style="color: #f97316;">⚙️ تنظیمات مخفی آزادکننده شبکه (سیستمی)</h3>
+                <p class="panel-desc">با وارد کردن مشخصات زیر در بخش تنظیمات پروکسی شبکه وای‌فای گوشی یا تنظیمات مودم خود، ترافیک برنامه‌هایی مثل تلگرام، واتساپ یا ابزارهایی مثل سایفون را آزاد کنید:</p>
+                
+                <div class="code-block">
+                    <div class="code-line"><span class="code-label">Proxy Type:</span> HTTP / HTTPS</div>
+                    <div class="code-line"><span class="code-label">Server Address:</span> <span class="current-host">...</span></div>
+                    <div class="code-line"><span class="code-label">Port:</span> 443</div>
+                    <div class="code-line"><span class="code-label">PAC URL (Auto):</span> <span class="current-pac" style="color: #a855f7;">...</span></div>
+                </div>
+                
+                <div style="font-size: 12px; color: #64748b; line-height: 1.8; background-color: rgba(15,23,42,0.6); padding: 16px; border-radius: 12px; border: 1px solid #1e293b;">
+                    <p>💡 **راهنمای موبایل:** وارد تنظیمات Wi-Fi شوید، روی نام شبکه متصل بزنید. بخش Proxy را روی حالت **Auto** گذاشته و لینک PAC URL بالا را قرار دهید (یا روی Manual گذاشته و Server و Port را دستی ست کنید).</p>
+                    <p style="margin-top: 8px;">🚀 **کمک به سایفون:** در تنظیمات سایفون به بخش Upstream Proxy بروید و هاست پروکسی را برابر با آدرس سرور بالا و پورت را روی 443 قرار دهید تا فوراً متصل شود.</p>
+                </div>
+                <button onclick="switchTab('select_mode')" class="btn-back">بازگشت به منو اصلی</button>
+            </div>
 
-<script>
-    function showToast(message, type = 'success') {
-        const container = document.getElementById('toast-container');
-        const toast = document.createElement('div');
-        toast.className = `p-4 rounded-xl shadow-lg text-xs font-bold flex items-center gap-2 border ${type === 'error' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-green-500/10 text-green-400 border-green-500/20'}`;
-        toast.textContent = message;
-        container.appendChild(toast);
-        setTimeout(() => toast.remove(), 3500);
-    }
+            <div id="tab-admin-panel" class="box-panel box-panel-wide hidden">
+                <h3 class="panel-title" style="color: #c084fc;">📊 پنل مدیریت و ساخت اکانت (ویژه وحید)</h3>
+                <form id="create-user-form" class="admin-form-grid">
+                    <input type="text" id="new-user-name" placeholder="نام کاربری جدید" required>
+                    <input type="text" id="new-user-pass" placeholder="رمز عبور" required>
+                    <button type="submit" class="btn-purple">+ ایجاد اکانت</button>
+                </form>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="text-align: right;">نام کاربری</th>
+                                <th>رمز عبور</th>
+                                <th>حجم اختصاصی</th>
+                                <th>وضعیت</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body"></tbody>
+                    </table>
+                </div>
+                <button onclick="switchTab('select_mode')" class="btn-back">بازگشت به منو اصلی</button>
+            </div>
+        </main>
 
-    const defaultAccounts = [
-        { user: 'client1', pass: '1122', traffic: '20 GB', status: 'Active' },
-        { user: 'client2', pass: '3344', traffic: '50 GB', status: 'Expired' }
-    ];
+        <footer>Powered by VidalCompany Infrastructure &copy; 2026</footer>
+    </div>
 
-    if (!localStorage.getItem('vidal_accounts')) { localStorage.setItem('vidal_accounts', JSON.stringify(defaultAccounts)); }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const savedUser = localStorage.getItem('veeed_user');
-        if (savedUser) { showDashboard(savedUser); }
-        updateHosts();
-    });
-
-    function updateHosts() {
-        const currentHost = window.location.host;
-        document.querySelectorAll('.current-host').forEach(el => el.textContent = currentHost);
-        document.querySelectorAll('.current-pac').forEach(el => el.textContent = `https://${currentHost}/api/proxy?url=pac`);
-    }
-
-    document.getElementById('login-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const user = document.getElementById('login-username').value.trim();
-        const pass = document.getElementById('login-password').value.trim();
-
-        if (user === 'vahid' && pass === 'admin123') {
-            localStorage.setItem('veeed_user', 'vahid');
-            showDashboard('vahid');
-            showToast('خوش آمدید جناب مهندس وحید!');
-            return;
+    <script>
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3500);
         }
 
-        const accounts = JSON.parse(localStorage.getItem('vidal_accounts'));
-        const found = accounts.find(acc => acc.user === user && acc.pass === pass);
+        const defaultAccounts = [
+            { user: 'client1', pass: '1122', traffic: '20 GB', status: 'Active' },
+            { user: 'client2', pass: '3344', traffic: '50 GB', status: 'Expired' }
+        ];
 
-        if (found) {
-            if (found.status === 'Expired') { showToast('اکانت شما منقضی شده است.', 'error'); }
-            else { localStorage.setItem('veeed_user', user); showDashboard(user); }
-        } else { showToast('اطلاعات اشتباه است.', 'error'); }
-    });
+        if (!localStorage.getItem('vidal_accounts')) { localStorage.setItem('vidal_accounts', JSON.stringify(defaultAccounts)); }
 
-    function showDashboard(username) {
-        document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('dashboard-screen').classList.remove('hidden');
-        document.getElementById('dashboard-screen').classList.add('flex');
-        if (username === 'vahid') { document.getElementById('admin-panel-btn').classList.remove('hidden'); }
-        switchTab('select_mode');
-        renderUsers();
-    }
-
-    function handleLogout() {
-        localStorage.removeItem('veeed_user');
-        window.location.reload();
-    }
-
-    function switchTab(tabName) {
-        const tabs = ['tab-select-mode', 'tab-web-proxy', 'tab-phone-config', 'tab-admin-panel'];
-        tabs.forEach(tab => document.getElementById(tab).classList.add('hidden'));
-        document.getElementById(`tab-${tabName.replace('_', '-')}`).classList.remove('hidden');
-    }
-
-    document.getElementById('admin-panel-btn').addEventListener('click', () => switchTab('admin_panel'));
-
-    document.getElementById('proxy-web-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        let url = document.getElementById('target-url-input').value.trim();
-        if (url) {
-            if (!url.startsWith('http://') && !url.startsWith('https://')) { url = 'https://' + url; }
-            window.location.href = `/api/proxy?url=${encodeURIComponent(url)}`;
-        }
-    });
-
-    function renderUsers() {
-        const accounts = JSON.parse(localStorage.getItem('vidal_accounts'));
-        const tbody = document.getElementById('users-table-body');
-        tbody.innerHTML = '';
-        accounts.forEach((acc, index) => {
-            const tr = document.createElement('tr');
-            tr.className = 'border-b border-slate-800/50 text-slate-300';
-            tr.innerHTML = `<td class="py-3 font-mono">${acc.user}</td><td class="py-3 font-mono">${acc.pass}</td><td class="py-3 text-xs">${acc.traffic}</td><td class="py-3"><span onclick="toggleStatus(${index})" class="cursor-pointer px-2.5 py-1 rounded text-xs font-bold ${acc.status === 'Active' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}">${acc.status === 'Active' ? 'فعال' : 'منقضی'}</span></td>`;
-            tbody.appendChild(tr);
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedUser = localStorage.getItem('veeed_user');
+            if (savedUser) { showDashboard(savedUser); }
+            updateHosts();
         });
-    }
 
-    window.toggleStatus = function(index) {
-        const accounts = JSON.parse(localStorage.getItem('vidal_accounts'));
-        accounts[index].status = accounts[index].status === 'Active' ? 'Expired' : 'Active';
-        localStorage.setItem('vidal_accounts', JSON.stringify(accounts));
-        renderUsers();
-    };
-
-    document.getElementById('create-user-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const user = document.getElementById('new-user-name').value.trim();
-        const pass = document.getElementById('new-user-pass').value.trim();
-        if (user && pass) {
-            const accounts = JSON.parse(localStorage.getItem('vidal_accounts'));
-            if (accounts.some(acc => acc.user === user)) { showToast('این کاربر وجود دارد', 'error'); return; }
-            accounts.push({ user: user, pass: pass, traffic: '20 GB', status: 'Active' });
-            localStorage.setItem('vidal_accounts', JSON.stringify(accounts));
-            document.getElementById('new-user-name').value = '';
-            document.getElementById('new-user-pass').value = '';
-            renderUsers();
-            showToast('اکانت ساخته شد');
+        function updateHosts() {
+            const currentHost = window.location.host;
+            document.querySelectorAll('.current-host').forEach(el => el.textContent = currentHost);
+            document.querySelectorAll('.current-pac').forEach(el => el.textContent = `https://${currentHost}/api/proxy?url=pac`);
         }
-    });
-</script>
+
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const user = document.getElementById('login-username').value.trim();
+            const pass = document.getElementById('login-password').value.trim();
+
+            if (user === 'vahid' && pass === 'admin123') {
+                localStorage.setItem('veeed_user', 'vahid');
+                showDashboard('vahid');
+                showToast('خوش آمدید جناب مهندس وحید!');
+                return;
+            }
+
+            const accounts = JSON.parse(localStorage.getItem('vidal_accounts'));
+            const found = accounts.find(acc => acc.user === user && acc.pass === pass);
+
+            if (found) {
+                if (found.status === 'Expired') { showToast('اکانت شما منقضی شده است.', 'error'); }
+                else { localStorage.setItem('veeed_user', user); showDashboard(user); }
+            } else { showToast('اطلاعات اشتباه است.', 'error'); }
+        });
+
+        function showDashboard(username) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('dashboard-screen').classList.remove('hidden');
+            document.getElementById('dashboard-screen').classList.add('flex');
+            if (username === 'vahid') { document.getElementById('admin-panel-btn').classList.remove('hidden'); }
+            switchTab('select_mode');
+            renderUsers();
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('veeed_user');
+            window.location.reload();
+        }
+
+        function switchTab(tabName) {
+            const tabs = ['tab-select-mode', 'tab-web-proxy', 'tab-phone-config', 'tab-admin-panel'];
+            tabs.forEach(tab => document.getElementById(tab).classList.add('hidden'));
+            document.getElementById(`tab-${tabName.replace('_', '-')}`).classList.remove('hidden');
+        }
+
+        document.getElementById('admin-panel-btn').addEventListener('click', () => switchTab('admin_panel'));
+
+        document.getElementById('proxy-web-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            let url = document.getElementById('target-url-input').value.trim();
+            if (url) {
+                if (!url.startsWith('http://') && !url.startsWith('https://')) { url = 'https://' + url; }
+                window.location.href = `/api/proxy?url=${encodeURIComponent(url)}`;
+            }
+        });
+
+        function renderUsers() {
+            const accounts = JSON.parse(localStorage.getItem('vidal_accounts'));
+            const tbody = document.getElementById('users-table-body');
+            tbody.innerHTML = '';
+            accounts.forEach((acc, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td style="text-align: right; font-weight: bold;">${acc.user}</td><td class="font-mono">${acc.pass}</td><td class="font-mono" style="font-size:12px;">${acc.traffic}</td><td><span onclick="toggleStatus(${index})" class="status-badge ${acc.status === 'Active' ? 'status-active' : 'status-expired'}">${acc.status === 'Active' ? 'فعال' : 'منقضی'}</span></td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.toggleStatus = function(index) {
+            const accounts = JSON.parse(localStorage.getItem('vidal_accounts'));
+            accounts[index].status = accounts[index].status === 'Active' ? 'Expired' : 'Active';
+            localStorage.setItem('vidal_accounts', JSON.stringify(accounts));
+            renderUsers();
+            showToast('وضعیت اکانت تغییر کرد.');
+        };
+
+        document.getElementById('create-user-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const user = document.getElementById('new-user-name').value.trim();
+            const pass = document.getElementById('new-user-pass').value.trim();
+            if (user && pass) {
+                const accounts = JSON.parse(localStorage.getItem('vidal_accounts'));
+                if (accounts.some(acc => acc.user === user)) { showToast('این کاربر وجود دارد', 'error'); return; }
+                accounts.push({ user: user, pass: pass, traffic: '20 GB', status: 'Active' });
+                localStorage.setItem('vidal_accounts', JSON.stringify(accounts));
+                document.getElementById('new-user-name').value = '';
+                document.getElementById('new-user-pass').value = '';
+                renderUsers();
+                showToast('اکانت با موفقیت ساخته شد');
+            }
+        });
+    </script>
+</body>
+</html>
