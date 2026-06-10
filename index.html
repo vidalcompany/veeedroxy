@@ -1,82 +1,340 @@
-const https = require('https');
-const http = require('http');
-const { URL } = require('url');
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سامانه هوشمند VIDAL NODE</title>
+    <!-- لود آسان Tailwind CSS برای طراحی فوق‌العاده زیبا -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-white min-h-screen flex flex-col justify-between selection:bg-pink-500 selection:text-white">
 
-module.exports = async (req, res) => {
-    // تنظیم هدرهای CORS برای پایداری و عدم بلاک شدن توسط پروتکل‌های مرورگر
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', '*');
+    <!-- ۱. صفحه احراز هویت اولیه (ورود کاربر) -->
+    <div id="login-screen" class="flex-grow flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-tr from-pink-500 to-orange-500 text-white text-3xl mb-4 animate-pulse">
+                ⚡
+            </div>
+            <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-500 mb-2">سامانه هوشمند VIDAL</h1>
+            <p class="text-slate-400 text-sm mb-6">جهت اتصال به اینترنت آزاد و پیکربندی شبکه، وارد شوید.</p>
+            
+            <form id="login-form" class="space-y-4">
+                <input 
+                    type="text" id="login-username" placeholder="نام کاربری" 
+                    class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 text-white placeholder-slate-600 focus:outline-none focus:border-pink-500 transition-colors text-right" required
+                >
+                <input 
+                    type="password" id="login-password" placeholder="رمز عبور" 
+                    class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 text-white placeholder-slate-600 focus:outline-none focus:border-pink-500 transition-colors text-right" required
+                >
+                <button type="submit" class="w-full bg-gradient-to-r from-pink-500 to-orange-500 font-bold py-3 rounded-xl hover:opacity-90 transition-opacity">
+                    ورود به سیستم
+                </button>
+            </form>
+        </div>
+    </div>
 
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
+    <!-- ۲. بخش داشبورد اصلی (بعد از لاگین نمایان می‌شود) -->
+    <div id="dashboard-screen" class="hidden flex-col min-h-screen">
+        <!-- هدر اصلی -->
+        <header class="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center px-6">
+            <div class="flex items-center gap-4">
+                <span class="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-500">VIDAL NODE</span>
+                <button id="admin-panel-btn" class="hidden bg-purple-600/20 text-purple-400 text-xs px-3 py-1 rounded-full border border-purple-500/30 font-bold">
+                    ⚙️ پنل مدیریت (وحید)
+                </button>
+            </div>
+            <button onclick="handleLogout()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm font-medium py-1.5 px-4 rounded-xl border border-red-500/20 transition-colors">
+                حذف تنظیمات و خروج
+            </button>
+        </header>
 
-    const targetUrl = req.query.url;
+        <!-- محتوای اصلی -->
+        <main class="flex-grow flex items-center justify-center p-6">
+            
+            <!-- تب الف: انتخاب حالت اتصال -->
+            <div id="tab-select-mode" class="text-center max-w-2xl w-full">
+                <h2 class="text-3xl font-extrabold mb-2">ارتباط مستقیم برقرار است 🚀</h2>
+                <p class="text-slate-400 mb-8">نوع بهینه‌سازی شبکه خود را انتخاب کنید.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- حالت اول: وب پروکسی -->
+                    <div onclick="switchTab('web_proxy')" class="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-right cursor-pointer hover:border-pink-500/50 transition-all group">
+                        <div class="w-12 h-12 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-500 text-xl mb-4 group-hover:scale-110 transition-transform">🌐</div>
+                        <h3 class="text-lg font-bold mb-1">حالت اول: مرورگر آزاد (Web Proxy)</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">باز کردن وب‌سایت‌ها و استریم ۱۰۰٪ فیلم و یوتیوب مستقیماً در مرورگر بدون نیاز به نصب هیچ برنامه اضافی.</p>
+                    </div>
 
-    if (!targetUrl) {
-        return res.status(400).send('Error: target URL is required.');
-    }
+                    <!-- حالت دوم: تنظیمات سیستمی گوشی -->
+                    <div onclick="switchTab('phone_config')" class="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-right cursor-pointer hover:border-orange-500/50 transition-all group">
+                        <div class="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 text-xl mb-4 group-hover:scale-110 transition-transform">📱</div>
+                        <h3 class="text-lg font-bold mb-1">حالت دوم: اتصال کل گوشی و مودم</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">دریافت تنظیمات مخفی جهت اعمال در پروکسی وای‌فای گوشی یا مودم برای آزاد شدن برنامه‌هایی مثل تلگرام، واتساپ و سایفون.</p>
+                    </div>
+                </div>
+            </div>
 
-    // پاسخ‌دهی به درخواست تنظیمات خودکار سیستم‌عامل (PAC URL) برای گوشی و مودم
-    if (targetUrl === 'pac') {
-        res.setHeader('Content-Type', 'application/x-ns-proxy-autoconfig');
-        const host = req.headers.host;
-        return res.status(200).send(`
-            function FindProxyForURL(url, host) {
-                // هدایت ترافیک شبکه‌های اجتماعی فیلتر شده از طریق سرور ورسل شما
-                if (dnsDomainIs(host, "youtube.com") || 
-                    dnsDomainIs(host, "googlevideo.com") || 
-                    dnsDomainIs(host, "telegram.org") || 
-                    dnsDomainIs(host, "whatsapp.net") || 
-                    dnsDomainIs(host, "instagram.com")) {
-                    return "PROXY ${host}:443";
-                }
-                return "PROXY ${host}:443; DIRECT";
+            <!-- تب ب: فرم پروکسی وب -->
+            <div id="tab-web-proxy" class="hidden bg-slate-900 border border-slate-800 p-8 rounded-2xl max-w-md w-full text-center">
+                <h3 class="text-xl font-bold mb-4">🌐 مرورگر آزاد اینترنت</h3>
+                <p class="text-slate-400 text-xs mb-6">آدرس سایت مورد نظرتان را وارد کنید تا از طریق سرور امن باز شود.</p>
+                <form id="proxy-web-form" class="space-y-4">
+                    <input 
+                        type="text" id="target-url-input" placeholder="مثال: youtube.com" 
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 text-white placeholder-slate-600 focus:outline-none focus:border-pink-500 text-left" required
+                    >
+                    <button type="submit" class="w-full bg-pink-600 font-bold py-3 rounded-xl hover:bg-pink-500 transition-colors">
+                        باز کردن ایمن صفحه و فیلم
+                    </button>
+                </form>
+                <button onclick="switchTab('select_mode')" class="text-sm text-slate-500 mt-6 block mx-auto hover:text-white">بازگشت به منو اصلی</button>
+            </div>
+
+            <!-- تب ج: تنظیمات سیستمی گوشی و مودم -->
+            <div id="tab-phone-config" class="hidden bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-xl w-full text-right space-y-6">
+                <div>
+                    <h3 class="text-xl font-bold text-orange-500 mb-2">⚙️ تنظیمات مخفی آزادکننده شبکه (سیستمی)</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">با وارد کردن مشخصات زیر در بخش تنظیمات پروکسی شبکه وای‌فای (Wi-Fi Proxy) گوشی یا مودم خود، ترافیک برنامه‌هایی مثل تلگرام، واتساپ یا ابزارهایی مثل سایفون را برای عبور از سد فیلترینگ آزاد کنید:</p>
+                </div>
+                
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 text-left font-mono text-sm text-orange-400">
+                    <div><span class="text-slate-500">Proxy Type:</span> HTTP / HTTPS</div>
+                    <div><span class="text-slate-500">Server Address:</span> <span class="current-host">...</span></div>
+                    <div><span class="text-slate-500">Port:</span> 443</div>
+                    <div><span class="text-slate-500">PAC URL (Auto):</span> <span class="current-pac">...</span></div>
+                </div>
+
+                <div class="text-xs text-slate-400 space-y-2 leading-relaxed bg-slate-950/50 p-4 rounded-xl border border-slate-800/30">
+                    <p>💡 **راهنمای اندروید و آیفون:** وارد تنظیمات Wi-Fi گوشی شوید، روی علامت چرخ‌دنده یا علامت (i) شبکه متصل شده بزنید. بخش Proxy را روی حالت **Auto** گذاشته و آدرس PAC URL بالا را قرار دهید. (یا روی Manual گذاشته و Server و Port را دستی ست کنید).</p>
+                    <p>🚀 **کمک به سایفون:** در تنظیمات سایفون به بخش Upstream Proxy بروید و هاست پروکسی را برابر با آدرس سرور بالا و پورت را روی 443 قرار دهید تا سرعت کانکت شدن آن چندبرابر شود.</p>
+                </div>
+
+                <button onclick="switchTab('select_mode')" class="text-sm text-slate-500 mt-2 block mx-auto hover:text-white">بازگشت به منو اصلی</button>
+            </div>
+
+            <!-- تب د: پنل مدیریت ادمین (مخصوص وحید) -->
+            <div id="tab-admin-panel" class="hidden bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-2xl w-full text-right space-y-6">
+                <h3 class="text-xl font-bold text-purple-400">📊 پنل مدیریت و ساخت اکانت (ویژه وحید)</h3>
+                
+                <!-- فرم ساخت کاربر جدید -->
+                <form id="create-user-form" class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800">
+                    <input 
+                        type="text" id="new-user-name" placeholder="نام کاربری جدید" 
+                        class="bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-sm text-center text-white focus:outline-none focus:border-purple-500" required
+                    >
+                    <input 
+                        type="text" id="new-user-pass" placeholder="رمز عبور" 
+                        class="bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-sm text-center text-white focus:outline-none focus:border-purple-500" required
+                    >
+                    <button type="submit" class="bg-purple-600 hover:bg-purple-500 font-bold text-sm py-2.5 rounded-lg transition-colors text-white">
+                        + ایجاد اکانت و حجم
+                    </button>
+                </form>
+
+                <!-- لیست کاربران -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-center">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-500">
+                                <th class="pb-2">نام کاربری</th>
+                                <th class="pb-2">رمز عبور</th>
+                                <th class="pb-2">حجم اختصاصی</th>
+                                <th class="pb-2">وضعیت</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            <!-- به صورت پویا توسط جاوااسکریپت پر می‌شود -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <button onclick="switchTab('select_mode')" class="text-sm text-slate-500 mt-2 block mx-auto hover:text-white">بازگشت به منو اصلی</button>
+            </div>
+
+        </main>
+
+        <!-- فوتر پروژه -->
+        <footer class="p-4 text-center text-xs text-slate-600 border-t border-slate-900">
+            Powered by VidalCompany Infrastructure &copy; 2026
+        </footer>
+    </div>
+
+    <!-- اسکریپت کنترل حالت‌ها و ارتباط با دیتابیس لوکال -->
+    <script>
+        // دیتای پیش‌فرض سیستم برای اولین لود
+        const defaultAccounts = [
+            { user: 'client1', pass: '1122', traffic: '20 GB', status: 'Active' },
+            { user: 'client2', pass: '3344', traffic: '50 GB', status: 'Expired' }
+        ];
+
+        // خواندن یا ست کردن اکانت‌ها در localStorage جهت پایداری
+        if (!localStorage.getItem('vidal_accounts')) {
+            localStorage.setItem('vidal_accounts', JSON.stringify(defaultAccounts));
+        }
+
+        // بررسی ورود قبلی
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedUser = localStorage.getItem('veeed_user');
+            if (savedUser) {
+                showDashboard(savedUser);
             }
-        `);
-    }
+            updateHosts();
+        });
 
-    try {
-        const parsedUrl = new URL(targetUrl);
-        
-        // بازسازی هدرها و ست کردن هاست مقصد (دور زدن فایروال‌ها)
-        const headers = { ...req.headers };
-        headers['host'] = parsedUrl.host;
-        
-        // حذف مواردی که با استریمینگ ویدیوها تداخل دارند
-        delete headers['accept-encoding']; 
-        delete headers['connection'];
+        // بروزرسانی داینامیک هاست و اطلاعات PAC بر اساس آدرس دامنه شما در ورسل
+        function updateHosts() {
+            const currentHost = window.location.host;
+            document.querySelectorAll('.current-host').forEach(el => el.textContent = currentHost);
+            document.querySelectorAll('.current-pac').forEach(el => el.textContent = `https://${currentHost}/api/proxy?url=pac`);
+        }
 
-        const options = {
-            method: req.method,
-            headers: headers
+        // ورود کاربر
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const user = document.getElementById('login-username').value.trim();
+            const pass = document.getElementById('login-password').value.trim();
+
+            // بررسی اکانت ادمین اصلی
+            if (user === 'vahid' && pass === 'admin123') {
+                localStorage.setItem('veeed_user', 'vahid');
+                showDashboard('vahid');
+                return;
+            }
+
+            // بررسی اکانت‌های معمولی
+            const accounts = JSON.parse(localStorage.getItem('vidal_accounts'));
+            const found = accounts.find(acc => acc.user === user && acc.pass === pass);
+
+            if (found) {
+                if (found.status === 'Expired') {
+                    alert('کاربر گرامی، اکانت شما منقضی شده است. لطفا جهت تمدید با وحید تماس بگیرید.');
+                } else {
+                    localStorage.setItem('veeed_user', user);
+                    showDashboard(user);
+                }
+            } else {
+                alert('نام کاربری یا رمز عبور اشتباه است.');
+            }
+        });
+
+        // نمایش داشبورد
+        function showDashboard(username) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('dashboard-screen').classList.remove('hidden');
+            document.getElementById('dashboard-screen').classList.add('flex');
+
+            if (username === 'vahid') {
+                document.getElementById('admin-panel-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('admin-panel-btn').classList.add('hidden');
+            }
+            switchTab('select_mode');
+            renderUsers();
+        }
+
+        // خروج و پاک کردن کامل تنظیمات
+        function handleLogout() {
+            localStorage.removeItem('veeed_user');
+            document.getElementById('login-username').value = '';
+            document.getElementById('login-password').value = '';
+            document.getElementById('dashboard-screen').classList.remove('flex');
+            document.getElementById('dashboard-screen').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            alert('تنظیمات شبکه و اعتبار اکانت با موفقیت از روی این سیستم پاک شد.');
+        }
+
+        // سوییچ بین تب‌ها
+        function switchTab(tabName) {
+            const tabs = ['tab-select-mode', 'tab-web-proxy', 'tab-phone-config', 'tab-admin-panel'];
+            tabs.forEach(tab => {
+                document.getElementById(tab).classList.add('hidden');
+            });
+            document.getElementById(`tab-${tabName.replace('_', '-')}`).classList.remove('hidden');
+        }
+
+        // اتصال دکمه ادمین بالا
+        document.getElementById('admin-panel-btn').addEventListener('click', () => {
+            switchTab('admin_panel');
+        });
+
+        // ارسال درخواست پروکسی وب (تائید آدرس سایت)
+        document.getElementById('proxy-web-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            let url = document.getElementById('target-url-input').value.trim();
+            if (url) {
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    url = 'https://' + url;
+                }
+                window.location.href = `/api/proxy?url=${encodeURIComponent(url)}`;
+            }
+        });
+
+        // رندر کردن جدول کاربران در بخش مدیریت ادمین
+        function renderUsers() {
+            const accounts = JSON.parse(localStorage.getItem('vidal_accounts'));
+            const tbody = document.getElementById('users-table-body');
+            tbody.innerHTML = '';
+
+            accounts.forEach((acc, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-slate-800/50 text-slate-300';
+                tr.innerHTML = `
+                    <td class="py-3 font-mono">${acc.user}</td>
+                    <td class="py-3 font-mono">${acc.pass}</td>
+                    <td class="py-3 text-xs">${acc.traffic || '20 GB'}</td>
+                    <td class="py-3">
+                        <span onclick="toggleStatus(${index})" class="cursor-pointer px-2.5 py-1 rounded text-xs font-bold ${acc.status === 'Active' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}">
+                            ${acc.status === 'Active' ? 'فعال' : 'منقضی'}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // سوییچ بین وضعیت فعال/منقضی برای ادمین
+        window.toggleStatus = function(index) {
+            const accounts = JSON.parse(localStorage.getItem('vidal_accounts'));
+            accounts[index].status = accounts[index].status === 'Active' ? 'Expired' : 'Active';
+            localStorage.setItem('vidal_accounts', JSON.stringify(accounts));
+            renderUsers();
         };
 
-        const transport = parsedUrl.protocol === 'https:' ? https : http;
+        // ساخت اکانت جدید توسط ادمین
+        document.getElementById('create-user-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const user = document.getElementById('new-user-name').value.trim();
+            const pass = document.getElementById('new-user-pass').value.trim();
 
-        // استریم زنده ویدیوها و فایل‌ها
-        const proxyReq = transport.request(targetUrl, options, (proxyRes) => {
-            
-            // کپی هدرهای پاسخ مقصد (ویژه ویدیوهای حجیم مثل Content-Range و Content-Length)
-            Object.keys(proxyRes.headers).forEach(key => {
-                res.setHeader(key, proxyRes.headers[key]);
-            });
+            if (user && pass) {
+                const accounts = JSON.parse(localStorage.getItem('vidal_accounts'));
+                
+                // بررسی تکراری نبودن
+                if (accounts.some(acc => acc.user === user)) {
+                    alert('این نام کاربری از قبل وجود دارد!');
+                    return;
+                }
 
-            // فرستادن وضعیت پاسخ (مانند پاسخ ۲۰۶ برای یوتیوب)
-            res.writeHead(proxyRes.statusCode);
+                accounts.push({
+                    user: user,
+                    pass: pass,
+                    traffic: '20 GB',
+                    status: 'Active'
+                });
 
-            // پایپ زنده اطلاعات به مرورگر بدون قطعی یا انقضای زمان لود
-            proxyRes.pipe(res);
+                localStorage.setItem('vidal_accounts', JSON.stringify(accounts));
+                document.getElementById('new-user-name').value = '';
+                document.getElementById('new-user-pass').value = '';
+                renderUsers();
+                alert('اکانت کاربری با موفقیت افزوده شد.');
+            }
         });
-
-        proxyReq.on('error', (err) => {
-            res.status(500).send(`Proxy Error: ${err.message}`);
-        });
-
-        req.pipe(proxyReq);
-
-    } catch (error) {
-        res.status(500).send(`Invalid URL: ${error.message}`);
-    }
-};
+    </script>
+</body>
+</html>
