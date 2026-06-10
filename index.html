@@ -5,39 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>سامانه هوشمند VIDAL NODE</title>
     <style>
-        /* تزریق مستقیم استایل‌ها برای حل مشکل فیلتر بودن CDN تلویند در ایران */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-        body { background-color: #020617; color: #f8fafc; min-height: 100vh; display: flex; flex-col: column; justify-content: space-between; direction: rtl; }
+        body { background-color: #020617; color: #f8fafc; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; direction: rtl; overflow-x: hidden; }
         .hidden { display: none !important; }
         .flex { display: flex !important; }
         
-        /* صفحه لاگین */
         .container { flex-grow: 1; display: flex; align-items: center; justify-content: center; padding: 16px; }
-        .login-card { background-color: #0f172a; border: 1px solid #1e293b; padding: 32px; rounded-radius: 16px; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); w-full: 100%; max-width: 400px; text-align: center; }
-        .logo-icon { inline-size: auto; width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(to top right, #ec4899, #f97316); display: inline-flex; align-items: center; justify-content: center; font-size: 30px; margin-bottom: 16px; }
+        .login-card { background-color: #0f172a; border: 1px solid #1e293b; padding: 32px; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); width: 100%; max-width: 400px; text-align: center; }
+        .logo-icon { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(to top right, #ec4899, #f97316); display: inline-flex; align-items: center; justify-content: center; font-size: 30px; margin-bottom: 16px; color: #fff; }
         .title-gradient { font-size: 24px; font-weight: 900; background: linear-gradient(to right, #ec4899, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
         .subtitle { color: #94a3b8; font-size: 14px; margin-bottom: 24px; }
         
-        /* فرم‌ها و اینپوت‌ها */
         .form-group { margin-bottom: 16px; }
-        input[type="text"], input[type="password"] { w-full: 100%; width: 100%; background-color: #020617; border: 1px solid #1e293b; border-radius: 12px; padding: 12px 16px; color: #fff; text-align: right; outline: none; transition: border 0.2s; }
+        input[type="text"], input[type="password"] { width: 100%; background-color: #020617; border: 1px solid #1e293b; border-radius: 12px; padding: 12px 16px; color: #fff; text-align: right; outline: none; transition: border 0.2s; }
         input[type="text"]:focus, input[type="password"]:focus { border-color: #ec4899; }
         input.text-left { text-align: left !important; }
         
-        .btn-gradient { w-full: 100%; width: 100%; background: linear-gradient(to right, #ec4899, #f97316); color: white; font-weight: bold; padding: 12px; border-radius: 12px; border: none; cursor: pointer; transition: opacity 0.2s; font-size: 16px; }
+        .btn-gradient { width: 100%; background: linear-gradient(to right, #ec4899, #f97316); color: white; font-weight: bold; padding: 12px; border-radius: 12px; border: none; cursor: pointer; transition: opacity 0.2s; font-size: 16px; }
         .btn-gradient:hover { opacity: 0.9; }
         
-        /* داشبورد و هدر */
         .dashboard { display: flex; flex-direction: column; min-height: 100vh; width: 100%; }
-        header { background-color: #0f172a; border-bottom: 1px solid #1e293b; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+        header { background-color: #0f172a; border-bottom: 1px solid #1e293b; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
         .header-logo { font-weight: 900; background: linear-gradient(to right, #ec4899, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 18px; }
         .btn-admin { background-color: rgba(147, 51, 234, 0.2); color: #c084fc; border: 1px solid rgba(147, 51, 234, 0.3); padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: bold; cursor: pointer; margin-right: 12px; }
         .btn-logout { background-color: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); padding: 6px 16px; border-radius: 12px; font-size: 14px; cursor: pointer; transition: background 0.2s; }
-        .btn-logout:hover { background-color: rgba(239, 68, 68, 0.2); }
         
-        main { flex-grow: 1; display: flex; align-items: center; justify-content: center; padding: 24px; }
+        main { flex-grow: 1; display: flex; align-items: center; justify-content: center; padding: 24px; position: relative; }
         
-        /* کارت‌های انتخاب حالت */
         .grid-modes { display: grid; grid-template-columns: 1fr; gap: 24px; width: 100%; max-width: 650px; margin: 0 auto; }
         @media (min-width: 768px) { .grid-modes { grid-template-columns: 1fr 1fr; } }
         .mode-card { background-color: #0f172a; border: 1px solid #1e293b; padding: 24px; border-radius: 16px; text-align: right; cursor: pointer; transition: all 0.2s; }
@@ -48,8 +42,7 @@
         .mode-title { font-size: 18px; font-weight: bold; margin-bottom: 4px; }
         .mode-desc { color: #94a3b8; font-size: 14px; line-height: 1.6; }
         
-        /* باکس فرم‌ها و جدول مدیریت */
-        .box-panel { background-color: #0f172a; border: 1px solid #1e293b; padding: 32px; border-radius: 16px; width: 100%; max-width: 500px; text-align: center; }
+        .box-panel { background-color: #0f172a; border: 1px solid #1e293b; padding: 32px; border-radius: 16px; width: 100%; max-width: 500px; text-align: center; z-index: 5; }
         .box-panel-wide { max-width: 650px; text-align: right; }
         .panel-title { font-size: 20px; font-weight: bold; margin-bottom: 16px; }
         .panel-desc { color: #94a3b8; font-size: 14px; margin-bottom: 24px; line-height: 1.6; }
@@ -61,32 +54,34 @@
         .btn-back { background: none; border: none; color: #64748b; font-size: 14px; margin-top: 24px; cursor: pointer; display: block; margin-left: auto; margin-right: auto; }
         .btn-back:hover { color: #fff; }
         
-        /* جدول مدیریت ادمین */
+        /* شبیه‌ساز نمایشگر وب اختصاصی (Iframe Container) */
+        .iframe-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #fff; z-index: 20; display: none; }
+        iframe { width: 100%; height: 100%; border: none; }
+        .floating-close-btn { position: fixed; bottom: 24px; left: 24px; background: linear-gradient(to right, #ef4444, #dc2626); color: white; font-weight: bold; padding: 12px 24px; border-radius: 50px; border: none; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 30; font-size: 14px; display: none; }
+        
+        /* جدول ادمین */
         .admin-form-grid { display: grid; grid-template-columns: 1fr; gap: 16px; background-color: #020617; padding: 16px; border-radius: 12px; border: 1px solid #1e293b; margin-bottom: 24px; }
         @media (min-width: 768px) { .admin-form-grid { grid-template-columns: 1fr 1fr auto; } }
         .btn-purple { background-color: #9333ea; color: white; border: none; border-radius: 8px; padding: 10px 20px; font-weight: bold; cursor: pointer; }
-        .btn-purple:hover { background-color: #a855f7; }
-        
         table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px; }
-        th { color: #64748b; border-b: 1px solid #1e293b; padding-bottom: 8px; font-weight: normal; }
+        th { color: #64748b; border-bottom: 1px solid #1e293b; padding-bottom: 8px; font-weight: normal; }
         td { padding: 12px 8px; border-bottom: 1px solid rgba(30, 41, 59, 0.5); color: #cbd5e1; }
-        .font-mono { font-family: monospace; }
         .status-badge { padding: 2px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; }
         .status-active { background-color: rgba(34, 197, 94, 0.1); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); }
         .status-expired { background-color: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
         
-        /* توست نوتیفیکیشن اختصاصی */
-        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 50; display: flex; flex-direction: column; gap: 8px; }
-        .toast { padding: 16px; border-radius: 12px; font-size: 13px; font-weight: bold; border: 1px solid; min-width: 250px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 100; display: flex; flex-direction: column; gap: 8px; }
+        .toast { padding: 16px; border-radius: 12px; font-size: 13px; font-weight: bold; border: 1px solid; min-width: 250px; }
         .toast-success { background-color: rgba(34, 197, 94, 0.1); color: #4ade80; border-color: rgba(34, 197, 94, 0.2); }
         .toast-error { background-color: rgba(239, 68, 68, 0.1); color: #f87171; border-color: rgba(239, 68, 68, 0.2); }
-        
         footer { padding: 16px; text-align: center; font-size: 12px; color: #334155; border-top: 1px solid #0f172a; width: 100%; }
     </style>
 </head>
 <body>
 
     <div id="toast-container"></div>
+
+    <button id="close-browser-btn" class="floating-close-btn" onclick="closeInternalBrowser()">❌ خروج از سایت مقصد</button>
 
     <div id="login-screen" class="container">
         <div class="login-card">
@@ -114,7 +109,11 @@
             <button onclick="handleLogout()" class="btn-logout">حذف تنظیمات و خروج</button>
         </header>
 
-        <main>
+        <main id="main-content-area">
+            <div id="internal-browser-wrapper" class="iframe-container">
+                <iframe id="proxy-iframe" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
+            </div>
+
             <div id="tab-select-mode" class="text-center" style="width: 100%;">
                 <h2 style="font-size: 28px; font-weight: 900; margin-bottom: 8px;">ارتباط مستقیم برقرار است 🚀</h2>
                 <p style="color: #64748b; margin-bottom: 32px;">نوع بهینه‌سازی شبکه خود را انتخاب کنید.</p>
@@ -122,7 +121,7 @@
                     <div onclick="switchTab('web_proxy')" class="mode-card">
                         <div class="mode-icon bg-pink-box">🌐</div>
                         <h3 class="mode-title">حالت اول: مرورگر آزاد (Web Proxy)</h3>
-                        <p class="mode-desc">باز کردن وب‌سایت‌ها و استریم ۱۰۰٪ فیلم و یوتیوب مستقیماً در مرورگر بدون نیاز به نصب برنامه.</p>
+                        <p class="mode-desc">باز کردن وب‌سایت‌ها و استریم ۱۰۰٪ فیلم و یوتیوب مستقیماً در همین صفحه بدون خروج از پنل.</p>
                     </div>
                     <div onclick="switchTab('phone_config')" class="mode-card">
                         <div class="mode-icon bg-orange-box">📱</div>
@@ -134,7 +133,7 @@
 
             <div id="tab-web-proxy" class="box-panel hidden">
                 <h3 class="panel-title">🌐 مرورگر آزاد اینترنت</h3>
-                <p class="panel-desc">آدرس سایت مورد نظرتان را وارد کنید تا از طریق سرور امن باز شود.</p>
+                <p class="panel-desc">آدرس سایت مورد نظرتان را وارد کنید تا درون همین پنل باز شود.</p>
                 <form id="proxy-web-form">
                     <div class="form-group">
                         <input type="text" id="target-url-input" class="text-left" placeholder="مثال: wikipedia.org" required>
@@ -147,17 +146,11 @@
             <div id="tab-phone-config" class="box-panel box-panel-wide hidden">
                 <h3 class="panel-title" style="color: #f97316;">⚙️ تنظیمات مخفی آزادکننده شبکه (سیستمی)</h3>
                 <p class="panel-desc">با وارد کردن مشخصات زیر در بخش تنظیمات پروکسی شبکه وای‌فای گوشی یا تنظیمات مودم خود، ترافیک برنامه‌هایی مثل تلگرام، واتساپ یا ابزارهایی مثل سایفون را آزاد کنید:</p>
-                
                 <div class="code-block">
                     <div class="code-line"><span class="code-label">Proxy Type:</span> HTTP / HTTPS</div>
                     <div class="code-line"><span class="code-label">Server Address:</span> <span class="current-host">...</span></div>
                     <div class="code-line"><span class="code-label">Port:</span> 443</div>
                     <div class="code-line"><span class="code-label">PAC URL (Auto):</span> <span class="current-pac" style="color: #a855f7;">...</span></div>
-                </div>
-                
-                <div style="font-size: 12px; color: #64748b; line-height: 1.8; background-color: rgba(15,23,42,0.6); padding: 16px; border-radius: 12px; border: 1px solid #1e293b;">
-                    <p>💡 **راهنمای موبایل:** وارد تنظیمات Wi-Fi شوید، روی نام شبکه متصل بزنید. بخش Proxy را روی حالت **Auto** گذاشته و لینک PAC URL بالا را قرار دهید (یا روی Manual گذاشته و Server و Port را دستی ست کنید).</p>
-                    <p style="margin-top: 8px;">🚀 **کمک به سایفون:** در تنظیمات سایفون به بخش Upstream Proxy بروید و هاست پروکسی را برابر با آدرس سرور بالا و پورت را روی 443 قرار دهید تا فوراً متصل شود.</p>
                 </div>
                 <button onclick="switchTab('select_mode')" class="btn-back">بازگشت به منو اصلی</button>
             </div>
@@ -261,14 +254,28 @@
 
         document.getElementById('admin-panel-btn').addEventListener('click', () => switchTab('admin_panel'));
 
+        // باز کردن سایت مقصد درون آی‌فریم داخلی به جای ریدایرکت کل صفحه
         document.getElementById('proxy-web-form').addEventListener('submit', (e) => {
             e.preventDefault();
             let url = document.getElementById('target-url-input').value.trim();
             if (url) {
                 if (!url.startsWith('http://') && !url.startsWith('https://')) { url = 'https://' + url; }
-                window.location.href = `/api/proxy?url=${encodeURIComponent(url)}`;
+                
+                const proxyUrl = `/api/proxy?url=${encodeURIComponent(url)}`;
+                
+                // نمایش آی‌فریم و دکمه خروج شناور
+                document.getElementById('internal-browser-wrapper').style.display = 'block';
+                document.getElementById('close-browser-btn').style.display = 'block';
+                document.getElementById('proxy-iframe').src = proxyUrl;
+                showToast('در حال بارگذاری سایت مقصد درون شبکه ایمن...');
             }
         });
+
+        function closeInternalBrowser() {
+            document.getElementById('internal-browser-wrapper').style.display = 'none';
+            document.getElementById('close-browser-btn').style.display = 'none';
+            document.getElementById('proxy-iframe').src = 'about:blank';
+        }
 
         function renderUsers() {
             const accounts = JSON.parse(localStorage.getItem('vidal_accounts'));
